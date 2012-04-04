@@ -56,7 +56,7 @@ if detect_usbstick; then
             RUNNING_VER=`cat /etc/liab_version | cut -d '-' -f 3`
             UPDATE_VER=`ls $FIRMWARE | cut -d'-' -f 5|cut -d. -f1`
 
-            if [[ "$RUNNING_VER" !=  "$UPDATE_VER" ]]; then
+#            if [[ "$RUNNING_VER" !=  "$UPDATE_VER" ]]; then //Uncommented by LIAB for Energinet
                 echo "Versions differ"
 
                 if [[ $MOUNTPOINT != $TEMPSTORE ]]; then
@@ -78,9 +78,9 @@ if detect_usbstick; then
                 else
                     echo "Error unpacking update. Aborting."
                 fi
-            else
-                echo "Same as running version. Skipping update."
-            fi
+#            else
+#                echo "Same as running version. Skipping update."
+#            fi
         else
             echo "No firmware present on disk!"
         fi
