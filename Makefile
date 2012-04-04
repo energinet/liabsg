@@ -1,5 +1,4 @@
 DISTDIR		= liab6I-ARM
-RELEASENAME	= LIABSG-liab6I-ARM-dec-2008
 LIABVERSION	= $(DISTDIR)_build-$(shell svnversion . | tr : -)
 KERNELVERSION	= 2.6.29.4
 PATCH		=
@@ -33,18 +32,16 @@ default:
 	@echo ""
 	@echo "make kernel	- Create liabboot/uuencoded_vmlinux"
 	@echo "make modules	- Create linux and liab kernel-modules"
-	@echo "make bootloader	- Create liabboot/uuencoded_bootloader"
 	@echo "make progs	- Compile liabprogs and copy to liabdisk"
 	@echo "make disk	- Create liabboot/uuencoded_diskimage"
 	@echo "make jffs2	- Create liabdisk/jffs2.tgz"
 	@echo "make firmware	- Create liabinstall/firmware.img"
 	@echo ""
 	@echo "make all      	- All of the above"
-	@echo "make release	- Also create ISO CD-images ready for shipping"
 	@echo ""
-	@echo "Make distclean	- Remove all generated files"
+	@echo "make distclean	- Remove all generated files"
 	@echo ""
-	@echo " - Richard Jørgensen"
+	@echo " - (C) 2012 LIAB ApS"
 	@echo ""
 
 kernel:
@@ -82,8 +79,6 @@ disk:
 	$(SUDO) cp $(INSTDIR)/update_firmware.sh $(DISKDIR)/libc6/usr/sbin
 	$(SUDO) echo "$(LIABVERSION)" > /tmp/$(VERSIONFILE)
 	$(SUDO) cp /tmp/$(VERSIONFILE) $(DISKDIR)/libc6/etc/
-
-
 # Make disk image
 	cd $(DISKDIR) ; $(SUDO) ./mkfpromimage
 	cd $(BOOTDIR) ; ./mkdisc
