@@ -1,4 +1,11 @@
-#!/bin/bash -x
+#!/bin/bash 
+#  --------oO LIABSG Open Source Distribution StartApplication Oo--------
+# This executable file starts the whole datalogger systems developed
+# for the Energinet Smart Grid project. HOWEVER, the base distro found on
+# github does not contain the licon and contdaem programs, they are located
+# elsewhere on github. Thus this distribution DOES NOT try to start Contdeam
+# and Licon IF you have not placed contdaem.tar.gz i /jffs2 
+#
 # To autoexecute this script on startup, add 'liabRUN=/jffs2/StartApplication'
 # to the boot-params in the bootloader.
 
@@ -12,7 +19,16 @@ if [ -d /jffs2/root ]; then
     cp -a /jffs2/root/* /.
 fi
 
+#  
+#
+CONTDAEM="/jffs2/contdaem.tar.gz"
 
+if [ ! -f $CONTDAEM ]
+then
+  echo "No contdaem.tar.gz found in /jffs2 ..."
+  echo "Datalogger and licon service will not be prepared and started"
+  exit
+fi
 
 # To start an application in the background, use 'daemon':
 #daemon /root/myapplication
@@ -22,7 +38,6 @@ fi
 tar zxvf /jffs2/liabconnect.tar.gz  -C /
 tar zxvf /jffs2/contdaem.tar.gz -C /
 tar zxvf /jffs2/upnp.tgz  -C /
-
 
 
 if [ -f /sys/class/leds/relay_1/brightness ] ; then 
