@@ -50,6 +50,7 @@ kernel:
 	$(MAKE) -C $(KERNDIR) all
 	cd $(BOOTDIR) ; ./mkkernel
 	mv $(BOOTDIR)/v $(BOOTDIR)/uuencoded_vmlinux
+	mkdir -p $(INSTDIR)/images/
 	mv $(BOOTDIR)/vmlinux.bin.gz $(INSTDIR)/images/
 
 modules:
