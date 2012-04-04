@@ -1,0 +1,59 @@
+#! /bin/sh -x
+DATE=`date`
+PLATFORM="LIAB SmartGrid"
+VERSION="build-`svnversion`"
+NAME=`whoami`
+
+KERNELSRC=../liabkernel/linux/vmlinux
+if [ -n $CROSS_COMPILE ]; then 
+    CROSS_COMPILE=arm-unknown-linux-gnu-
+fi
+IMAGE=../liabinstall/images/image9260
+TOTAL=tmpimage
+HEADER=mkkernelheader
+INITRD=../liabinstall/images/initrd.gz
+KERNELOFFSET=32768
+INITRDOFFSET=4194304
+
+${CROSS_COMPILE}objcopy -O binary -R .note -R .comment -R .stab -R .stabstr \
+              $KERNELSRC vmlinux.bin;
+ls   -l vmlinux.bin
+dd if=/dev/zero of=f1 bs=$KERNELOFFSET count=1 status=noxfer 
+cat f1 vmlinux.bin > f2
+dd if=/dev/zero of=f1 bs=1M  count=10 status=noxfer
+cat f2 f1 > f3
+dd if=f3 of=f4 bs=$INITRDOFFSET count=1 status=noxfer
+cat f4 $INITRD > $TOTAL
+CKSUM=`cksum $TOTAL |cut -d" " -f1`
+SIZE=`cksum $TOTAL |cut -d" " -f2`
+cat << EOF > $HEADER
+MD --oO LIAB BOOT IMAGE HEADER Version 1.0 Oo-- MD
+This image contains a Linux kernel and initial
+ramdisc, suitable for boot on a LIAB platform
+
+Platform .......: $PLATFORM
+Creation date ..: $DATE
+Creator ........: $NAME
+Version ........: $VERSION
+Kernel offset ..: $KERNELOFFSET
+initrd offset ..: $INITRDOFFSET
+Total size .....: $SIZE
+Checksum .......: $CKSUM
+
+
+EOH
+EOF
+echo "---------- Begin of image header"
+cat $HEADER
+echo "---------- End of image header"
+
+dd if=/dev/zero of=f1 bs=512 count=1 status=noxfer 
+cat $HEADER f1 > f2 
+dd if=f2 of=f3 bs=512 count=1 status=noxfer 
+dd if=$TOTAL of=f4 bs=512 skip=1 status=noxfer 
+cat f3 f4 > $TOTAL
+cp $TOTAL $IMAGE
+rm f1 f2 f3 f4 $TOTAL 
+
+rm -f $HEADER
+rm -f vmlinux.bin

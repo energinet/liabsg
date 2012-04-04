@@ -1,0 +1,77 @@
+
+         This file is part of the distribution of the software
+         for the Linux In A Box (LIAB) microprocessor board.
+
+         This distribution is free software; you can redistribute it 
+         and/or modify it under the terms of the GNU General Public 
+         License as published by the Free Software Foundation.
+
+         This documentation is distributed in the hope that it will be 
+         useful, but WITHOUT ANY WARRANTY;  without even the implied 
+         warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+         See the GNU General Public License for more details.  
+                         
+                         Please visit http://www.liab.dk.
+
+                        LIAB Electronics ApS, Februar 2004
+                    ----------------------------------------------
+
+Change log for the boot disc image for the Linux In A Box board.
+----------------------------------------------------------------
+
+June  5, 2000, Midi: 
+  Release of version 1.0 of the boot disc image.
+
+July 8, 2000, Midi:
+  Problems with the disc image created under RedHat 6.1 and 6.2:
+  Disc images cannot be mounted. Reason: default sparse superblock
+  flag has changed from "off" to "on" from RH60 to RH61! Thus, it
+  must be turned off manually. According to the man-page this is done 
+  using `-s0' which doesn't do the job! `-s-1' does, however.
+
+March 10, 2001, Midi:
+  More problems with mke2fs: `-s-1' doesnt work on RH 6.2 but
+  `-O none' is the right way to do it...
+
+March 10, 2001, Midi:
+  fprom-program in libc5/usr/sbin updated to handle Macronix FLASH'es
+  also.
+
+June 28, 2001, Midi
+  A libc6-based ramdisc distribution for the i386EX LIAB!
+  Based on the RedHat 6.2 distribution, but with stripped shared
+  libraries and binaries.
+  
+October 18, 2001, RHA
+  Added libnss_dns-2.1.3.so to enable DNS support.
+
+December 2001, RHA&SMM
+  Added /usr/arch/[liabclassic,miniliab, liab520] directories. These
+  directories should be used for board specific binaries, such as the
+  fprom and eeprom programs.
+
+April 2002, SMM
+  New ramdisc distribution based on Redhat 7.2, but with stripped 
+  shared libraries and binaries.
+
+May 2002, SMM
+  Fixed bug concerning the DocumentRoot of the Apache Web Server. Added
+  eeprom and rtcram programs.
+
+October 2002, SMM
+  Fixed bug concering the CGI-bin directory of the Apache Web Server.
+
+October 2003, RIC
+  New ramdisc distribution based on Redhat 9.0, but with stripped
+  shared libraries and binaries.
+
+Februar 2004, RIC
+  Added device files and init script to support JFFS2.
+
+Januar 2005, RIC
+  New ramdisc distribution based on Debian Testing. Added nfs-bootdisk 
+  distribution with development tools, also based on Debian Testing.
+
+September 2006, msa
+  New 2.6 kernel version. Added 2.6 modutils replacement and 2.6 support 
+  in LIAB kernel modules.

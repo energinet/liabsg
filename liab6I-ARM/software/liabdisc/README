@@ -1,0 +1,128 @@
+
+         This file is part of the distribution of the software
+         for the Linux In A Box (LIAB) microprocessor board.
+
+         This distribution is free software; you can redistribute it 
+         and/or modify it under the terms of the GNU General Public 
+         License as published by the Free Software Foundation.
+
+         This documentation is distributed in the hope that it will be 
+         useful, but WITHOUT ANY WARRANTY;  without even the implied 
+         warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+         See the GNU General Public License for more details.  
+                         
+                         Please visit http://www.liab.dk.
+
+                        LIAB ApS, September 2005.
+                    -----------------------------------------
+
+Source for (compressed) ramdisk images for the Linux In A Box board.
+--------------------------------------------------------------------
+
+To build a compressed ramdisk image, you must be root. Next you just
+type mkfpromimage:
+
+   ..$ su
+      Password: 
+   ..# cd software/liabdisc
+   ..# mkfpromimage
+   15+0 records in
+   15+0 records out
+   mke2fs 1.32 (09-Nov-2002)
+   Filesystem label=
+   OS type: Linux
+   ... ...
+   ... ...
+   initrd:  77.6% -- replaced with initrd.gz
+   ..#<ctrl-D>
+   ..$ 
+
+If you, for instance, want to edit the /etc/hosts-file on your LIAB, you
+switch to root, edit the file using something like:
+
+..#[ emacs | vi | jed | ... ] software/liabdisc/libc6/etc/hosts 
+
+next you make a new ramdisk image:
+
+..# mkfpromimage
+
+A file called `initrd.gz' now resides in /tmp which contains the
+compressed ramdisk image. You may download this image over the serial
+line using the bootloader on the LIAB. You need to switch to the directory 
+`software/liabboot' where you find the script `mkdisc'. For more information
+on serial download, please read the `software/liabboot/README.download'-file.
+
+
+NFS boot disk for the Linux In A Box board.
+---------------------------------------------------------------------
+It is possible to boot from a NFS-mounted disk instead of the onboard
+RAM-disk image.  The directory 'nfsbootdisk' contain such a disk.
+
+In order to boot from NFS you must export 'nfsbootdisk' on a linux
+computer, and chenge the boot parameters on LIABARM9200 to boot from
+the NFS disk. 
+
+Make a copy of 'nfsbootdisk', preserving all permissions and special files:
+
+..# cp -a .../nfsbootdisk /nfsbootdisk
+
+Export '/nfsbootdisk' by adding the line 
+"/nfsbootdisk 0.0.0.0/0.0.0.0(rw,no_root_squash)" to /etc/exports: 
+
+..# echo "/nfsbootdisk 0.0.0.0/0.0.0.0(rw,no_root_squash)" >> /etc/exports
+..# exportfs -av
+
+Start nfs server subsystem:
+
+..# /etc/init.d/portmap start
+..# /etc/init.d/nfs start
+..# /etc/init.d/nfslock start
+
+Add these four parameters in the bootloader on the liab board,
+substituting "192.168.1.230" with your linux NFS-server IP address and 
+substituting "192.168.1.180" with the IP address of your LIABARM9200 board:
+
+5: root=/dev/nfs
+6: nfsroot=192.168.1.230:/nfsbootdisk
+7: ip=192.168.1.180:192.168.1.230:::::off
+8: noinitrd
+
+setting params in the bootloader:
+
+Connect to the LIAB using "cu":
+
+   ..$ cu -l /dev/ttyS0 -s 9600
+   Connected.
+
+Reset you LIAB and enter the three dots within the first five seconds. You
+will see something like:
+
+
+
+  -------------o Linux In A Box (LIAB) Bootloader o--------------
+
+                 -> Visit http://www.liab.dk <-
+
+  Release: 1.0, November 17, 2001 at 16:17 by rha
+  Copyright LIAB Electronics ApS
+  The bootloader will now search for a compressed kernel and file-
+  system and try to boot up a Linux system. IF YOU WANT TO GET INTO
+  THE BOOT LOADER, YOU MUST SEND 3 DOTS WITHIN THE NEXT 5 SECONDS: **
+  LIAB bootloader, `h' for help
+  Boot>
+
+
+Enter the FLASH PROM menu by pressing "f <ret>". You will see something like:
+
+  Boot>p
+  Entering PARAM utility submenu, `h' for help
+  param> i 6 root=/dev/nfs
+  param> i 7 nfsroot=192.168.1.230:/home/ric/Projects/LIAB/ARM/liabarm/nfsshare
+  param> i 8 ip=192.168.1.188:192.168.1.230:::::off
+  param> i 9 noinitrd
+  param> w
+
+Answer 'y' to write.
+
+  param> q
+  boot> q

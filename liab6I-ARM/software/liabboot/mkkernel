@@ -1,0 +1,11 @@
+#! /bin/sh
+KERNELSRC=../liabkernel/linux/vmlinux
+CROSS_COMPILE=arm-unknown-linux-gnu-
+${CROSS_COMPILE}objcopy -O binary -R .note -R .comment -R .stab -R .stabstr \
+              $KERNELSRC vmlinux.bin;
+ls   -l vmlinux.bin
+rm   -f vmlinux.bin.gz
+gzip -9 vmlinux.bin
+ls   -l vmlinux.bin.gz
+./mkuu  vmlinux.bin.gz  20000  > v
+ls   -l v

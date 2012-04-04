@@ -1,0 +1,15 @@
+#!/bin/bash
+dd if=/dev/zero of=initrd bs=1024k count=24
+#7168
+/sbin/mke2fs -F -m0 initrd
+mkdir mntpoint
+mount -o loop initrd mntpoint
+#
+cp -a libc6/* mntpoint
+#
+umount mntpoint
+gzip -v9 initrd 
+rm -rf mntpoint
+#mv initrd.gz /tmp/initrd.gz
+
+

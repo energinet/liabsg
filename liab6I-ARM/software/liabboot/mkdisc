@@ -1,0 +1,5 @@
+DISCIMAGE=../liabdisc/initrd.gz
+LOADADDR=1A0000
+ls -l $DISCIMAGE 
+./mkuu $DISCIMAGE $LOADADDR > d
+ls -l d

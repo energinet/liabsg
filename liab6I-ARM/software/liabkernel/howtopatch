@@ -1,0 +1,19 @@
+Assuming that
+  `dir1' contains the old, original and commonly distributed directory
+and
+  `dir2' contains the updated, new directory
+
+then you can produce a patch-file using
+
+diff -r -C3 -P dir1 dir2 > p
+
+if you put yourself into `dir1' an execute
+
+patch -p1 < ../p
+
+then dir1 will be updated to match dir2
+
+files in dir2 which is not in dir1 will be created as a 
+consequence of the patch.
+
+Files in dir1 which is not in dir2 will be untouched.

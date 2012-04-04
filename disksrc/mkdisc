@@ -1,0 +1,5 @@
+DISCIMAGE=/tmp/initrd.gz
+LOADADDR=100000
+ls -l $DISCIMAGE 
+./mkuu $DISCIMAGE $LOADADDR > d
+ls -l d

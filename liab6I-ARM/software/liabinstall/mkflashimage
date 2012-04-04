@@ -1,0 +1,52 @@
+#! /bin/bash
+FILE=ARM_FLASH_Image
+
+###
+# Partition layout for this firmware
+###
+# 0x000000-0x0020000 : "LIABARMAT91 FLASH Boot partition"
+# 0x020000-0x019FFFF : "LIABARMAT91 FLASH Kernel partition"
+# 0x1A0000-0x05FFFFF : "LIABARMAT91 FLASH Root partition"
+# 0x600000-0x07DFFFF : "LIABARMAT91 FLASH JFFS2 partition"
+# 0xFE0000-0x1000000 : "LIABARMAT91 FLASH Param partition"
+
+IMAGES=./images
+BOOT=$IMAGES/bootloader.bin
+KERNEL=$IMAGES/vmlinux.bin.gz
+DISK=$IMAGES/initrd.gz
+JFFS2=$IMAGES/jffs2.img
+PARAMS=$IMAGES/params.bin
+
+CONFIG=../liabkernel/linux/liabdin-2.6.29.4.config 
+
+BOOTL_SZ=`grep MTD_LIABARM_BOOTSIZE $CONFIG| cut -d= -f2`
+KERNEL_SZ=`grep MTD_LIABARM_KERNELSIZE $CONFIG| cut -d= -f2`
+INITRD_SZ=`grep MTD_LIABARM_ROOTSIZE $CONFIG| cut -d= -f2`
+
+KERNEL_START=$((BOOTL_SZ))
+INITRD_START=$((KERNEL_START+KERNEL_SZ))
+JFFS2_START=$((INITRD_START+INITRD_SZ))
+
+KERNEL_START=$((KERNEL_START/64))
+INITRD_START=$((INITRD_START/64))
+JFFS2_START=$((JFFS2_START/64))
+
+echo "Kernel starts at 64k * $KERNEL_START"
+echo "initrd starts at 64k * $INITRD_START"
+echo "jffs2 starts at 64k * $JFFS2_START"
+
+# Pad zeros into 16 M file
+dd if=/dev/zero bs=64K count=256 | tr "\0" "\377" > $FILE
+
+# Bootloader starts at 0k
+dd conv=notrunc bs=64K seek=0   of=$FILE if=$BOOT 
+# Kernel starts at 128k
+dd conv=notrunc bs=64K seek=$KERNEL_START   of=$FILE if=$KERNEL
+# Disk starts at 1664k
+dd conv=notrunc bs=64K  seek=$INITRD_START   of=$FILE if=$DISK
+# JFFS2 starts at 6 M
+dd conv=notrunc bs=64k  seek=$JFFS2_START  of=$FILE if=$JFFS2
+# Params start at 16M - 128k
+dd conv=notrunc bs=64K seek=254 of=$FILE if=$PARAMS
+
+ls -l $FILE

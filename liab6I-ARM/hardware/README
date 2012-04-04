@@ -1,0 +1,32 @@
+
+         This file is part of the distribution of the hardware docu-
+         mentation for the Linux In A Box (LIAB) microprocessor board.
+
+         This distribution is free hardware; you can redistribute it 
+         and/or modify it under the terms of the GNU General Public 
+         License as published by the Free Software Foundation.
+
+         This documentation is distributed in the hope that it will be 
+         useful, but WITHOUT ANY WARRANTY;  without even the implied 
+         warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+         See the GNU General Public License for more details.  
+                         
+                       Please visit http://www.liab.dk.
+
+                             LIAB ApS, November 2006.
+                           -------------------------
+
+Hardware documentation for the nanoLIAB microprocessor board.
+-----------------------------------------------------------------
+
+This documentation pertain to 1.1 the nanoLIAB board.
+
+The directory "/hardware": This directory contains hardware
+documentation of the version 1.1 nanoLIAB board. The documentation
+contains schematics (diagrams), Printed Circuit Board (PCB) layouts.
+
+/hardware/processorboard....:  Schematics (diagrams) for the nanoLIAB
+                               processor board, provided in PDF format.
+
+
+

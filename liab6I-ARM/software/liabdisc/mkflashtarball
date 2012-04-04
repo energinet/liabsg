@@ -1,0 +1,16 @@
+#!/bin/bash -x
+
+### Undo damages from our versioncontrol, SVN. 
+rm -rf tmpdir
+cp -a jffs2 tmpdir
+find ./tmpdir -depth -name .svn -exec rm -rf \{\} \;
+chown -R root:root tmpdir
+
+# Make disk image
+cd tmpdir
+tar zcvf ../flash.tar.gz *
+cd ..
+ls -l flash.tar.gz
+
+# Clean up
+rm -rf tmpdir

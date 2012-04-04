@@ -1,0 +1,5 @@
+DISCIMAGE=../liabinstall/images/jffs2.img
+LOADADDR=600000
+ls -l $DISCIMAGE
+./mkuu $DISCIMAGE $LOADADDR > j
+ls -l j

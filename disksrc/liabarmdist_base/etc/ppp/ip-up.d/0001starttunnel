@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+IPPARAM=$6
+
+logger -i "IPPARAM = $IPPARAM"
+
+if [[ $IPPARAM != "tun0" ]]; then
+    logger -i "Starting tunnel"
+    if [ -x /root/tunnel ]; then
+        /root/tunnel start
+    fi
+fi
+
+exit 0
+

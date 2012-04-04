@@ -1,0 +1,10 @@
+#! /bin/bash
+FILE=$1
+LOADADDR=$2
+if [ ! -r $FILE ] 
+then
+echo No such file to be uuencoded: $FILE 
+exit
+fi
+CKSUM=$LOADADDR-`cksum $FILE | cut -f1 "-d "`
+uuencode $CKSUM < $FILE

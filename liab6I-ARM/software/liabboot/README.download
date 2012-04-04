@@ -1,0 +1,312 @@
+
+
+
+         This file is part of the distribution of the software
+         for the Linux In A Box (LIAB) microprocessor board.
+
+         This distribution is free software; you can redistribute it 
+         and/or modify it under the terms of the GNU General Public 
+         License as published by the Free Software Foundation.
+
+         This documentation is distributed in the hope that it will be 
+         useful, but WITHOUT ANY WARRANTY;  without even the implied 
+         warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+         See the GNU General Public License for more details.  
+                         
+    	        	Please visit http://www.liab.dk.
+
+                        LIAB Electronics, September 2006.
+	                ------------------------------
+
+Contents:
+--------
+  1. Source for the Linux In A Box bootloader.
+  2. Programming a new bootloader into the FLASH PROM.
+  3. Programming a new kernel image into the FLASH PROM.
+  4. Programming a new disc image into the FLASH PROM.
+  5. Writing boot parameters into FLASH PROM.
+  6. Bootstrapping a board with blank FLASH PROM.
+
+
+1. Source for the Linux In A Box bootloader.
+--------------------------------------------
+
+The directory 'bootloader' contains source for the LIAB bootloader. 
+To build the bootloader you just type
+
+   ..$ cd bootloader ; make dep; make bootprom 
+
+The newly generated bootloader will be called 'b'.
+
+Note: You need the crosscompiler found in 'software/crosscompiler'
+installed in order to compile the bootloader.
+
+
+2. Programming a new bootloader into the FLASH PROM.
+-----------------------------------------------------
+
+PLEASE NOTE: THIS SHOULD NOT BE THE FIRST THING TO TRY OUT ON THE LIAB
+             YOU JUST HAVE RECEIVED FROM LIAB Electronics! 
+
+The bootloader image is stored in the file "b" as a uuencoded
+image. Provided that your LIAB is able to boot using an earlier
+bootloader, you may download the new bootloader by the following
+procedure:
+
+Connect to the LIAB using "cu":
+
+   ..$ cu -l /dev/ttyS0 -s 115200
+   Connected.
+
+Reset you LIAB and enter the three dots within the first five seconds. You
+will see something like:
+
+
+
+
+
+
+  -------------o Linux In A Box (LIAB) Bootloader o--------------
+
+                 -> Visit http://www.liab.dk <-
+
+  Release: 1.0, January 04, 2006 at 14:51 by ric
+  Copyright LIAB Electronics ApS.
+  The bootloader will now search for a compressed kernel and file-
+  system and try to boot up a Linux system. IF YOU WANT TO GET INTO
+  THE BOOT LOADER, YOU MUST SEND 3 DOTS WITHIN THE NEXT 5 SECONDS: *
+  LIAB bootloader, `h' for help
+  Boot>
+
+
+Enter the FLASH PROM menu by pressing "f <ret>". You will see something like:
+
+  Boot>f
+  Entering FPROM utility submenu, `h' for help
+  Memory configuration of LIAB
+  AMD flash at addr 0x00000000 to 0x00ffffff 
+  FPROM>
+
+
+Delete the first 64 KB of FLASH PROM:
+
+   FPROM>e 0,ffff
+
+You will get:
+
+   Start address ...........: 0x000000
+   End address .............: 0x00ffff
+   Block size (Kbytes) .....:       64
+   *TAKE CARE* your are going to erase some of the BOOT SECTORS!!!
+   Do you want to erase? [y/n]>
+
+Answer "y" to erase the boot sector. DO NOT take power away from the LIAB at
+this moment! If you do so, you will need the "i2cprog" circuit to get you
+back into business! Now, to download the "b" image do like this:
+
+   FPROM>l
+   ~>b  < this is a command to cu, indicating that the file "b" is to
+          be downloaded - you have a 5 second timeout to type this command >
+   1 2 3 4 5 6 7 8 9 10 11 ....  < indication of download >
+
+At the very end you will hopefully get:
+
+   ... 1039 1040 < or some other number>
+   [file transfer complete]
+   [connected]
+   No errors during reception of uuencoded data
+   Start Address ...........:          0
+   End Address .............:       b632
+   Length ..................:      46643
+   POSIX.1 CRC checksum ....: 2689630089
+   PROM>
+
+The new bootloader is now residing in the FLASH PROMS and you can depress
+reset to verify that the board is able to boot.
+
+
+3. Programming a new kernel image into the FLASH PROMS.
+-------------------------------------------------------
+
+Before you can download a new kernel image, you must go to the
+liabkernel-directory and make a new uncompressed kernel image under
+the name "vmlinux". This is done the normal way such as:
+
+  ..$ cd software/liabkernel/linux
+  ..$ make distclean
+  ..$ cp liab_armAT91_net_mtd_jffs2.config .config
+  ..$ make oldconfig
+      < press 'enter' to any questions >
+  ..$ make clean dep modules modules_install vmlinux
+
+Note: You need the crosscompiler found in 'software/crosscompiler'
+installed in order to compile the kernel.
+
+Any kernel modules you've created have been copied to ../kernelmodules. 
+If you want to include them in a new diskimage, copy them to
+'software/liabdisc/libc6/lib/modules/' before creating and
+installing a new disk image:
+
+   ..$ find ../kernelmodules/ -name '*.o' \
+       -exec cp \{\} ../../liabdisc/libc6/lib/modules/ \;
+
+Next, go back to the directory liabboot and run the shell-script
+"./mkkernel". You wil see something like:
+
+   ..$ ./mkkernel 
+   -rwxr-xr-x   1 liab     users      714752 Jun 14 03:29 vmlinux.bin
+   -rwxr-xr-x   1 liab     users      333285 Jun 14 03:29 vmlinux.bin.gz
+   -rw-r--r--   1 liab     users      459227 Jun 14 03:29 v
+
+As a result, you will get an uuencoded image file of the name "v". The
+size of the compressed Linux kernel image when downloaded to FLASH
+PROM is the size of the file "vmlinux.bin.gz".
+
+Downloading the "v"-image is done in the same way as for a new
+bootloader, except that linux kernels are loaded starting from
+0x20000. If your kernel image is smaller than 1536 KB, you may erase
+the range 20000-19ffff by entering the following in the FLASH PROM submenu:
+
+   FPROM>e 20000,19ffff
+   Start address ...........: 0x020000
+   End address .............: 0x19ffff
+   Block size (Kbytes) .....:     1536
+   Do you want to erase? [y/n]>
+   FPROM>l
+   ~>v
+   1 2 3 4 5 6 7 8 9 10 11 ....  < indication of download >
+   ....   ....   ....   ....  
+   .... 15396 15397 
+   [file transfer complete]
+   [connected]
+   No errors during reception of uuencoded data
+   Start Address ...........:      20000
+   End Address .............:      c91d2
+   Length ..................:     692691
+   POSIX.1 CRC checksum ....:  511537705
+   FPROM>
+
+The new kernel is now residing in the FLASH PROMS and you boot the
+Linux system by typing "q <ret>" twice.
+
+4. Programming a new disc image into the FLASH PROM.
+-------------------------------------------------------
+
+Downloading a disc image to FLASH PROMS is done in the same way as a
+bootloader or kernel image.
+
+Before you can download a new disc image, you must go to the
+liabdisc-directory and make a new compressed disc image: Switch to root
+and do like this:
+
+   ..$ su
+      Password: 
+   ..# cd software/liabdisc
+   ..# ./mkfpromimage
+   15+0 records in
+   15+0 records out
+   mke2fs 1.32 (09-Nov-2002)
+   Filesystem label=
+   OS type: Linux
+   ... ...
+   ... ...
+   initrd:  79.7% -- replaced with initrd.gz
+   ..#<ctrl-D>
+   ..$ 
+
+The compressed disc image now resides in /tmp/initrd.gz. Go back to liabboot
+and make an uuencoded image for download using cu
+
+   ..$ cd ../liabboot
+   ..$ ./mkdisc
+   -rw-r--r--    1 root     root      3196480 Jan  5 14:15 /tmp/initrd.gz
+   -rw-r--r--    1 liab    users      4404076 Jan  5 14:16 d
+
+As a result, you will get an uuencoded image file of the name "d". The
+size of the compressed disc image when downloaded to FLASH PROM is the
+size of the file "/tmp/initrd.gz".
+
+Downloading the "d"-image is done in the same way as for a new
+bootloader. You must erase an adequate amount of the FLASH PROM and for
+the above image. Suggestion: the range 1A0000-5fffff:
+
+   PROM>e 1A0000,5fffff
+   Start address ...........: 0x1A0000
+   End address .............: 0x5fffff
+   Block size (Kbytes) .....:     4480
+   Do you want to erase? [y/n]>
+   FPROM>l
+   ~>d
+   1 2 3 4 5 6 7 8 9 10 11 ....  < indication of download, this may take a while >
+   ....   ....   ....   ....  
+   .... 73367 73368
+   [file transfer complete]
+   [connected]
+   No errors during reception of uuencoded data
+   Start Address ...........:     1A0000
+   End Address .............:     426029
+   Length ..................:    3301418
+   POSIX.1 CRC checksum ....: 1310647252
+   FPROM> 
+
+The new disc image is now residing in the FLASH PROMS and you boot the
+Linux system by typing "q <ret>" twice.
+
+
+5. Writing boot parameters into FLASH PROM.
+
+The boot parameters (MAC-address, hostname, IP-address etc.) is stored
+in FLASH PROM. The can be changed/written using the bootloader:
+
+Connect to the LIAB using "cu":
+
+   ..$ cu -l /dev/ttyS0 -s 115200
+   Connected.
+
+Reset you LIAB and enter the three dots within the first five seconds. 
+   ...
+   ...
+   THE BOOT LOADER, YOU MUST SEND 3 DOTS WITHIN THE NEXT 5 SECONDS: *
+   LIAB bootloader, `h' for help
+   Boot>
+
+Enter the PARAM menu by pressing "p <ret>". You will see something like:
+
+   Boot>p
+   Entering the boot/network parameter editor, `h' for help,
+   use options `n' and `a' for editing of network stuff.
+   Param>
+
+List the params with "p <ret>" - they should look something like this:
+
+   Param>p
+    1: liabETH=00:30:05:6B:61:84
+    2: liabIP=192.168.1.180,8,192.168.1.1
+    3: liabHOST=liab.dk
+    4: liabJFFS2=/jffs2
+    5: liabRUN=/jffs2/StartApplication
+
+Otherwise create them with:
+
+   Param> i 1 liabETH=00:30:05:6B:61:84
+   Param> i 2 liabIP=192.168.1.180,8,192.168.1.1
+   Param> i 3 liabHOST=liab.dk
+   Param> i 4 liabJFFS2=/jffs2
+   Param> i 5 liabRUN=/jffs2/StartApplication
+
+Finally write parameters to FLASH with "w <ret> y":
+
+   Param>w
+   Do you want to write the parameters back to FPROM? [y/n]>
+   Boot parameters start at: 0x007ff800
+
+The new boot parameters are now residing in the FLASH PROMS and you boot the
+Linux system by typing "q <ret>" twice.
+
+
+Sincerely Yours
+
+LIAB ApS,
+Oestre Allé 6,
+DK-9530 Stoevring.
+http://www.liab.dk

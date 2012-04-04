@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+# if an old resolv.conf file exists, restore it
+if [ -e $REALRESOLVCONF.pppd-backup ]; then
+  mv -f $REALRESOLVCONF.pppd-backup $REALRESOLVCONF
+fi
+
+exit 0
+

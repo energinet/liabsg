@@ -1,0 +1,121 @@
+
+         This file is part of the distribution of the software
+         for the Linux In A Box (LIAB) microprocessor board.
+
+         This distribution is free software; you can redistribute it 
+         and/or modify it under the terms of the GNU General Public 
+         License as published by the Free Software Foundation.
+
+         This documentation is distributed in the hope that it will be 
+         useful, but WITHOUT ANY WARRANTY;  without even the implied 
+         warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+         See the GNU General Public License for more details.  
+                         
+                         Please visit http://www.liab.dk.
+
+                         LIAB ApS, February 2007.
+                    -----------------------------------------
+
+Source for the 2.6.16 Linux kernel, patched for the Linux In A Box board.
+-------------------------------------------------------------------------
+
+The directory `software/liabkernel/linux' contains the *patched* source
+for the Linux kernel to be put on the LIAB board. To build the Linux kernel,
+you switch to `software/liabkernel/linux' and type
+
+make xconfig
+
+This will open a configuration window. A number of configuration files
+are included for the different LIAB boards. These can be loaded and
+used unmodified, or modified to suit your needs. After exiting the
+configuration program, you should type
+
+make dep; make vmlinux; make modules; make modules_install
+
+Compiling the LIAB modules: 
+--------------------------- 
+The directory 'liab-modules' contains modules for the nanoLIAB. To
+compile these modules the kernel must be prepared. This is done by
+following the procedure below (notice that there are two nanoLIAB
+.config files. If your board has the Davicom DM9161A PHY mounted use
+liab_nano_2.6.16_dm9161a.config):
+
+..$ cd <liabkernel directory>
+..$ cp liab_nano_2.6.16.config .config
+..$ make oldconfig
+   .
+   .
+   .
+
+Next a kernel build must be started in order for the build scripts to
+be generated. Notice that it is not necessary to build the entire
+kernel. The build process can be stopped by hitting Ctrl+C when the
+last script has been prepared, as shown below:
+
+..$ make vmlinux
+   .
+   .
+  CHK     include/linux/version.h
+  UPD     include/linux/version.h
+  SPLIT   include/linux/autoconf.h -> include/config/*
+  SYMLINK include/asm-arm/arch -> include/asm-arm/arch-at91rm9200
+  Generating include/asm-arm/mach-types.h
+  SYMLINK include/asm -> include/asm-arm
+   .
+   .
+   .
+  HOSTCC  scripts/bin2c
+  CC      init/main.o
+ <hit ctrl+C>
+
+Now the kernel is prepared and the modules can be compiled by typing
+'make' in their respectice directories.
+
+Downloading a kernel to the LIAB: 
+---------------------------------
+
+To download a new kernel to the FLASH PROMS on the LIAB board, you may
+follow the procedure described in the file
+`software/liabboot/README.download'.  Alternatively, you may use the
+Linux program `fprom' on the LIAB, see the file
+`software/liabboot/README.download'
+
+How to patch using the `patch' program:
+---------------------------------------
+
+Untaring the archive: `linux-2.6.16.tar.bz2' using
+
+..$ tar -xvjf linux-2.6.16.tar.bz2
+
+you obtain the directory `linux-2.6.16' in the current working directory.  If
+you put yourself into `linux-2.6.16' using `..$ cd linux-2.6.16' and execute
+
+patch -p1 < ../2.6.16-at91.patch
+patch -p1 < ../liab-linux-2.6.16.patch
+
+then kernel source will be updated to match the source patched for the
+LIAB board, i.e. the source in the `linux'-directory found on the
+distribution CD-ROM.
+
+How to create a patch file using `diff':
+----------------------------------------
+
+Assuming that
+  `dir1' contains the old, original and commonly distributed directory
+and
+  `dir2' contains the updated, new directory
+
+then you can produce a patch-file using
+
+ ..$ diff -r -C3 -P dir1 dir2 > p
+
+If you put yourself into `dir1' an execute
+
+ ..$ patch -p1 < ../p
+
+then dir1 will be updated to match dir2
+
+Files in dir2 which is not in dir1 will be created as a 
+consequence of the patch.
+
+Files in dir1 which is not in dir2 will be untouched.

@@ -1,0 +1,8 @@
+lock
+mtu 1200
+noauth
+nobsdcomp
+nodeflate
+nodefaultroute
+noipdefault
+persist

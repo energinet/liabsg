@@ -1,0 +1,14 @@
+#!/bin/bash
+
+### Undo damages from our versioncontrol, SVN. 
+rm -rf tmpdir
+cp -a jffs2 tmpdir
+find ./tmpdir -depth -name .svn -exec rm -rf \{\} \;
+chown -R root:root tmpdir
+
+# Make disk image
+./mkfs.jffs2 -d tmpdir -o jffs2.img
+ls -l jffs2.img
+
+# Clean up
+rm -rf tmpdir

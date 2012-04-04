@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Make cryptographic signature
+rm -f firmware.tgz firmware.tgz.md5
+tar cvfz firmware.tgz --exclude .svn do_update.sh bin images
+md5sum firmware.tgz | cut -d " " -f 1 > firmware.tgz.md5
+
+# Make firmware image
+rm -f firmware*.img
+tar czf firmware-${LIABVERSION}.img firmware.tgz firmware.tgz.md5
+rm -f firmware.tgz firmware.tgz.md5

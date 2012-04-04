@@ -1,0 +1,126 @@
+#! /bin/bash
+### Options: -v   Also print all used libs
+
+if [ "$1" == "-v" ]; then
+  verbose="true"
+  shift
+fi
+if [ -n "$DISTNAME" ]; then
+  fsroot=$DISTNAME
+elif [ -n "$1" ]; then
+  fsroot=$1
+else
+  fsroot="../liab4H-ARM/software/liabdisc/libc6/"
+fi
+
+### Find all executable files
+files=`ls $fsroot/bin/* $fsroot/sbin/* $fsroot/usr/bin/* $fsroot/usr/sbin/*`
+
+### Find all installed libs
+libs=`ls $fsroot/lib/l* $fsroot/usr/lib/l* $fsroot/lib/security/*`
+libs_found=`for lib in $libs; do basename $lib ; done | sort | uniq`
+# echo "libs_found:" $libs_found
+
+### Find all libraries that are loaded by someone - the really needed libs
+ldd_libs=`readelf -d $files 2>/dev/null | egrep "(File:|library:)"`
+libs_needed=`echo "$ldd_libs" | grep "Shared library" | tr -d "[]" | awk '{print $5}' |sort | uniq`
+## Add Pam-libs to 'libs_needed' (defined in /etc/pam.d/* config files)
+pam_libs_raw=`grep -v "^#" $fsroot/etc/pam.d/* | grep "pam_.*\.so"`
+pam_libs=`for name in $pam_libs_raw; do echo $name | grep "pam_.*\.so"; done | sort | uniq`
+libs_needed=`echo -e "$libs_needed\n$pam_libs" | sort | uniq`
+## Add httpd-libs - to 'libs_needed' (defined in /etc/http/ *.conf files)
+#httpd_libs=`cat $fsroot/etc/httpd/conf*/*.conf | grep -v "^#" | grep "mod_.*\.so" | sed 's/.*\(mod_.*\.so\).*/\1/' | sort | uniq`
+#libs_needed=`echo -e "$libs_needed\n$httpd_libs" | sort | uniq`
+libs_needed=`echo -e "$libs_needed\nlibnss_files-2.3.2.so" | sort | uniq`
+## Calculate closure - some libs load other libs
+old_value=""
+until [ "$old_value" == "$libs_needed" ]; do
+    old_value="$libs_needed"
+    new_libs=`for lib in $libs_needed; do find $fsroot -name $lib -exec readelf -d \{\} \; 2>/dev/null | grep "Shared library" | tr -d "[]" | awk '{print $5}'; done`
+    libs_needed=`echo -e "$libs_needed\n$new_libs" | sort | uniq`
+done
+# echo "libs_needed:" $libs_needed
+
+### Find which of the needed libs are found on disk 
+### == libs in both 'libs_needed' and 'libs_found'
+libs_used=`echo -e "$libs_needed\n$libs_found" | sort | uniq -d`
+# echo "libs_used: " $libs_used
+
+### Find which of the needed libs are NOT found on disk 
+### == libs in 'libs_needed' and not in 'libs_used'
+libs_missing=`echo -e "$libs_used\n$libs_needed" | sort | uniq -u`
+# echo "libs_missing: " $libs_missing
+
+
+### And finally, find libs that are not being used - this is being complicated
+### by the fact that many files in lib/* are softlinks to other libs, so
+### we need the true names of the libs - not the name of the symbolic link.
+
+### Find the canonical (true) names for libs_used
+old_value=""
+libs_used_canon="$libs_used"
+until [ "$old_value" == "$libs_used_canon" ]; do
+    old_value="$libs_used_canon"
+    tmp=`echo $libs_used_canon | sed 's/ / -o -name /g'`
+    libs_used_canon=`find $fsroot \( -name $tmp \) \( \( -type l -printf "%l\n" \) -o \( -type f -printf "%f\n" \) \) | sort | uniq`
+done
+# echo "$libs_used_canon"
+
+### Find the canonical (true) names for libs_found
+old_value=""
+libs_found_canon="$libs_found"
+until [ "$old_value" == "$libs_found_canon" ]; do
+    old_value="$libs_found_canon"
+    tmp=`echo $libs_found_canon | sed 's/ / -o -name /g'`
+    libs_found_canon=`find $fsroot \( -name $tmp \) \( \( -type l -printf "%l\n" \) -o \( -type f -printf "%f\n" \) \) | sort | uniq`
+done
+# echo "$libs_found_canon"
+
+### Find which libs are unused
+### == libs in 'libs_found_canon' and not in 'libs_used_canon'
+libs_unused=`echo -e "$libs_used_canon\n$libs_found_canon" | sort | uniq -u`
+# echo "$libs_unused"
+
+### Create list of which files are using which libraries
+### Format of $file_libs: "<program-or-library> <lib-1> {lib-2} ... {lib-n}"
+# libs loaded by pam:
+new_pam=`echo "$pam_libs_raw" | sed 's/\(.*\):.*\(pam[^ ]*\.so\).*/File: \1(pam.d) \2/g' | sort | uniq`
+# libs loaded by libs:
+extra_libs=`for lib in $libs_needed; do find $fsroot -name $lib; done`
+new_libs=`readelf -d $extra_libs 2>/dev/null | egrep "(File:|library:)"`
+#
+file_libs=`echo -e "${ldd_libs}\n${new_libs}" | sed 's/.*\[\(.*\)\].*/\1/'`
+file_libs=`echo $file_libs ${new_pam}| sed 's/File: [^ ]*\/\([^\/ ]*\)/\n\1/g'`
+# echo "$file_libs"
+
+echo "Checking libraries in LIAB distribution: $fsroot"
+if [[ "$libs_missing" == ""  && "$libs_unused" == "" ]]; then
+    echo "   Library dependencies are OK."
+    echo
+fi
+
+if [ "$verbose" == "true" ]; then
+    echo
+    echo "Libs used:"
+    for name in $libs_used; do 
+	echo -e -n "\t$name:" 
+	depends=`echo "$file_libs" | grep $name | awk -v name=$name '{if ($1 != name) print $1}'`
+	echo $depends" " | sed 's/\(.\{,63\} \)/\n\t\t\1/g'
+    done
+fi
+
+if [[ "$libs_missing" != "" || "$verbose" == "true" ]]; then
+    echo
+    echo "Libs missing:"
+    for name in $libs_missing; do
+	lib=`echo "$file_libs" | grep $name | gawk '{print $1}' | sed 's/.*\/\([^\/]*\)/\1/'`
+	echo -e -n "\t$name:"
+	echo $lib" " | sed 's/\(.\{,63\} \)/\n\t\t\1/g'
+    done
+fi
+
+if [[ "$libs_unused" != ""  || "$verbose" == "true" ]]; then
+    echo
+    echo "Libs unused:"
+    for name in $libs_unused; do echo -e "\t$name" ; done
+fi
