@@ -1,9 +1,0 @@
-# /etc/profile
-# System wide environment and startup programs
-# Functions and aliases go in /etc/bashrc
-#
-PATH=$PATH:.
-export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/X11R6/lib:/usr/local/lib
-if [ "$PS1" ]; then
-    PS1="\u@\h\\$ "
-fi
