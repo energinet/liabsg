@@ -74,6 +74,7 @@ modules:
 
 disk:
 # Generate distribution from deb-packages
+	$(SUDO) -rm -fr$(DISKDIR)/libc6
 	$(SUDO) $(MAKE) -C $(DISKSRC)
 	$(SUDO) mv $(DISKSRC)/libc6 $(DISKDIR)/libc6
 	$(SUDO) cp $(INSTDIR)/usb_update.sh $(DISKDIR)/libc6/usr/sbin
